@@ -30,7 +30,7 @@ async function getData(objectIds){
 // This example creates simple polygons representing crown land in Ontario.
 function initMap() {
 	const map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 4,
+    zoom: 6,
     center: { lat: 49.000, lng: -80.000},
     mapTypeId: "terrain",
   });
