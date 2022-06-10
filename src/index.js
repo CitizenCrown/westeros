@@ -27,6 +27,20 @@ async function getData(objectIds){
   return data;
 }
 
+// Function to add logo to the map with link to website.
+function MyLogoControl(controlDiv) {
+    controlDiv.style.padding = '5px';
+    var logo = document.createElement('IMG');
+    logo.src = '../img/logo.png';
+    logo.style.cursor = 'pointer';
+	logo.s
+    controlDiv.appendChild(logo);
+
+    google.maps.event.addDomListener(logo, 'click', function() {
+        window.location = 'https://www.citizencrown.ca/'; 
+    });
+}
+
 // This example creates simple polygons representing crown land in Ontario.
 function initMap() {
 	const map = new google.maps.Map(document.getElementById("map"), {
@@ -36,7 +50,12 @@ function initMap() {
 	disableDefaultUI: true,
   });
 	console.log("Initializing map.");
-  
+
+  // Add logo control.
+  const logoControlDiv = document.createElement("div");
+  MyLogoControl(logoControlDiv)
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
+
   // Get a list of object id's.
   getObjectIds().then(ids => {
 		console.log(`Fetched ids: ${ids}`);
@@ -69,7 +88,7 @@ function initMap() {
 					fillColor: "#FF0000",
 					fillOpacity: 0.35,
 				});
-				
+
 				polygonArea.setMap(map);
 				console.log(`Created polygon(s) for: [${feature.attributes.OBJECTID}] ${feature.attributes.NAME_ENG} (${feature.attributes.DESIGNATION_ENG})`);
 			})
