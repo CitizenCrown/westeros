@@ -33,6 +33,7 @@ function initMap() {
     zoom: 6,
     center: { lat: 49.000, lng: -80.000},
     mapTypeId: "terrain",
+	disableDefaultUI: true,
   });
 	console.log("Initializing map.");
   
