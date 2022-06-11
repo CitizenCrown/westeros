@@ -41,6 +41,16 @@ function MyLogoControl(controlDiv) {
 	});
 }
 
+// Function to add marker.
+function addMarker(map, pos) {
+	var marker = new google.maps.Marker({
+	  position: {lat: pos.lat, lng: pos.lng},
+	  map: map,
+	  icon: "../img/marker.png",
+	});
+	marker.setMap(map);
+  }
+
 // This example creates simple polygons representing crown land in Ontario.
 function initMap() {
 	const map = new google.maps.Map(document.getElementById("map"), {
@@ -49,6 +59,11 @@ function initMap() {
 		disableDefaultUI: true,
 	});
 	console.log("Initializing map.");
+
+	// Add logo control.
+	const logoControlDiv = document.createElement("div");
+	MyLogoControl(logoControlDiv)
+	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
 
 	// Focus map position Ontario.
 	const geocoder = new google.maps.Geocoder();
@@ -62,10 +77,22 @@ function initMap() {
 			window.alert("Geocode was not successful for the following reason: " + e)
 		);
 
-	// Add logo control.
-	const logoControlDiv = document.createElement("div");
-	MyLogoControl(logoControlDiv)
-	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
+	// Setup Geolocation.
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(
+			(position) => {
+				const pos = {
+					lat: position.coords.latitude,
+					lng: position.coords.longitude,	
+				};
+				map.setCenter(pos);
+				addMarker(map, pos);
+			},
+			() => {
+				window.alert("Error: The Geolocation service failed.");
+			}
+		);
+	}
 
 	// Get a list of object id's.
 	getObjectIds().then(ids => {
