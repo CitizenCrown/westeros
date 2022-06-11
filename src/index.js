@@ -44,12 +44,23 @@ function MyLogoControl(controlDiv) {
 // Function to add marker.
 function addMarker(map, pos) {
 	var marker = new google.maps.Marker({
-	  position: {lat: pos.lat, lng: pos.lng},
-	  map: map,
-	  icon: "../img/marker.png",
+		position: { lat: pos.lat, lng: pos.lng },
+		map: map,
+		icon: "../img/marker.png",
 	});
 	marker.setMap(map);
-  }
+}
+
+// Function to animate zoom.
+function animateMapZoomTo(map, targetZoom) {
+	var currentZoom = arguments[2] || map.getZoom();
+	if (currentZoom != targetZoom) {
+		google.maps.event.addListenerOnce(map, 'zoom_changed', function (event) {
+			animateMapZoomTo(map, targetZoom, currentZoom + (targetZoom > currentZoom ? 1 : -1));
+		});
+		setTimeout(function () { map.setZoom(currentZoom) }, 80);
+	}
+}
 
 // This example creates simple polygons representing crown land in Ontario.
 function initMap() {
@@ -71,7 +82,7 @@ function initMap() {
 		.geocode({ address: "Ontario" })
 		.then((response) => {
 			const position = response.results[0].geometry.location;
-			map.setCenter(position);
+			map.panTo(position);
 		})
 		.catch((e) =>
 			window.alert("Geocode was not successful for the following reason: " + e)
@@ -83,13 +94,14 @@ function initMap() {
 			(position) => {
 				const pos = {
 					lat: position.coords.latitude,
-					lng: position.coords.longitude,	
+					lng: position.coords.longitude,
 				};
-				map.setCenter(pos);
+				map.panTo(pos);
+				animateMapZoomTo(map, 10);
 				addMarker(map, pos);
 			},
 			() => {
-				window.alert("Error: The Geolocation service failed.");
+				window.alert("The Geolocation service failed. You might need to allow access to your location.");
 			}
 		);
 	}
