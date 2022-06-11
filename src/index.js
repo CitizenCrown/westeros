@@ -49,6 +49,9 @@ function addMarker(map, pos) {
 		icon: "../img/marker.png",
 	});
 	marker.setMap(map);
+	map.panTo(marker.position);
+	animateMapZoomTo(map, 10);
+	console.log("Add marker finished.");
 }
 
 // Function to animate zoom.
@@ -82,7 +85,8 @@ function initMap() {
 		.geocode({ address: "Ontario" })
 		.then((response) => {
 			const position = response.results[0].geometry.location;
-			map.panTo(position);
+			map.setCenter(position);
+			console.log("Map centered on Ontario.");
 		})
 		.catch((e) =>
 			window.alert("Geocode was not successful for the following reason: " + e)
@@ -96,14 +100,15 @@ function initMap() {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude,
 				};
-				map.panTo(pos);
-				animateMapZoomTo(map, 10);
 				addMarker(map, pos);
 			},
 			() => {
 				window.alert("The Geolocation service failed. You might need to allow access to your location.");
 			}
 		);
+	}
+	else {
+
 	}
 
 	// Get a list of object id's.
