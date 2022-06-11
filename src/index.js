@@ -120,11 +120,11 @@ function initMap() {
 				// Construct the polygon.
 				const polygonArea = new google.maps.Polygon({
 					paths: paths,
-					strokeColor: "#FF0000",
-					strokeOpacity: 0.8,
+					strokeColor: "#F58672",
+					strokeOpacity: 1.0,
 					strokeWeight: 2,
-					fillColor: "#FF0000",
-					fillOpacity: 0.35,
+					fillColor: "#F58672",
+					fillOpacity: 0.25,
 				});
 
 				polygonArea.setMap(map);
