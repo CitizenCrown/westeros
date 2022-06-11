@@ -41,58 +41,9 @@ function MyLogoControl(controlDiv) {
 	});
 }
 
-// Function to add marker.
-function addMarker(map, pos) {
-	var marker = new google.maps.Marker({
-		position: { lat: pos.lat, lng: pos.lng },
-		map: map,
-		icon: "../img/marker.png",
-	});
-	marker.setMap(map);
-	map.panTo(marker.position);
-	animateMapZoomTo(map, 10);
-	console.log("Add marker finished.");
-}
-
-// Function to animate zoom.
-function animateMapZoomTo(map, targetZoom) {
-	var currentZoom = arguments[2] || map.getZoom();
-	if (currentZoom != targetZoom) {
-		google.maps.event.addListenerOnce(map, 'zoom_changed', function (event) {
-			animateMapZoomTo(map, targetZoom, currentZoom + (targetZoom > currentZoom ? 1 : -1));
-		});
-		setTimeout(function () { map.setZoom(currentZoom) }, 80);
-	}
-}
-
-// This example creates simple polygons representing crown land in Ontario.
-function initMap() {
-	const map = new google.maps.Map(document.getElementById("map"), {
-		zoom: 6,
-		mapTypeId: "terrain",
-		disableDefaultUI: true,
-	});
-	console.log("Initializing map.");
-
-	// Add logo control.
-	const logoControlDiv = document.createElement("div");
-	MyLogoControl(logoControlDiv)
-	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
-
-	// Focus map position Ontario.
-	const geocoder = new google.maps.Geocoder();
-	geocoder
-		.geocode({ address: "Ontario" })
-		.then((response) => {
-			const position = response.results[0].geometry.location;
-			map.setCenter(position);
-			console.log("Map centered on Ontario.");
-		})
-		.catch((e) =>
-			window.alert("Geocode was not successful for the following reason: " + e)
-		);
-
-	// Setup Geolocation.
+// Function to execute geolocation.
+function attemptGeolocation(map) {
+	console.log("Attempting to use geolocation.");
 	if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(
 			(position) => {
@@ -107,10 +58,32 @@ function initMap() {
 			}
 		);
 	}
-	else {
+}
 
+// Function to add marker.
+function addMarker(map, pos) {
+	var marker = new google.maps.Marker({
+		position: { lat: pos.lat, lng: pos.lng },
+		map: map,
+		icon: "../img/marker.png",
+	});
+	marker.setMap(map);
+	map.panTo(marker.position);
+	animateMapZoomTo(map, 10);
+}
+
+// Function to animate zoom.
+function animateMapZoomTo(map, targetZoom) {
+	var currentZoom = arguments[2] || map.getZoom();
+	if (currentZoom != targetZoom) {
+		google.maps.event.addListenerOnce(map, 'zoom_changed', function (event) {
+			animateMapZoomTo(map, targetZoom, currentZoom + (targetZoom > currentZoom ? 1 : -1));
+		});
+		setTimeout(function () { map.setZoom(currentZoom) }, 80);
 	}
+}
 
+function loadMapData(map) {
 	// Get a list of object id's.
 	getObjectIds().then(ids => {
 		console.log(`Fetched ids: ${ids}`);
@@ -149,4 +122,36 @@ function initMap() {
 			})
 		});
 	});
+}
+
+// This example creates simple polygons representing crown land in Ontario.
+function initMap() {
+	const map = new google.maps.Map(document.getElementById("map"), {
+		zoom: 6,
+		mapTypeId: "terrain",
+		disableDefaultUI: true,
+	});
+	console.log("Initializing map.");
+
+	// Add logo control.
+	const logoControlDiv = document.createElement("div");
+	MyLogoControl(logoControlDiv)
+	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
+
+	// Focus map position on Ontario.
+	const geocoder = new google.maps.Geocoder();
+	geocoder
+		.geocode({ address: "Ontario" })
+		.then((response) => {
+			const position = response.results[0].geometry.location;
+			map.setCenter(position);
+			console.log("Map centered on Ontario.");
+
+			attemptGeolocation(map);
+		})
+		.catch((e) =>
+			window.alert("Geocode was not successful for the following reason: " + e)
+		);
+
+	loadMapData(map);
 }
