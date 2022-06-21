@@ -1,0 +1,20 @@
+{
+  "name": "westeros",
+  "version": "1.0.0",
+  "description": "Westeros is a web application for displaying custom geo data using Google maps",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node ./app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CitizenCrown/westeros.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CitizenCrown/westeros/issues"
+  },
+  "homepage": "https://github.com/CitizenCrown/westeros#readme"
+}

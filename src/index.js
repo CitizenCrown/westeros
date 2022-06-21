@@ -1,29 +1,19 @@
-// Function to request a list of object id's from the government Ontario website.
-async function getObjectIds() {
-	let response = await fetch('https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services/LIO_OPEN_DATA/LIO_Open06/MapServer/5/query?' + new URLSearchParams({
-		f: 'json',
-		outSR: '4326',
-		returnIdsOnly: true,
-		where: '1=1'
-	}));
-	let data = await response.json()
-
-	// Too much data. Return a chunk for now.
-	console.log(`Total object id's found: ${data.objectIds.length}`);
-	return data.objectIds.slice(0, 50);
-}
-
 // Function to request specific object data from the government Ontario website.
-async function getData(objectIds) {
-	let response = await fetch('https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services/LIO_OPEN_DATA/LIO_Open06/MapServer/5/query?' + new URLSearchParams({
-		f: 'json',
-		outSR: '4326',
-		objectIds: objectIds,
-		outFields: ["*"],
-		returnGeometry: true,
-		where: '1=1'
-	}));
+async function getApiData(tile) {
+	console.log("Requesting data from the API..");
+	let response = await fetch('https://essosapi20220512144031.azurewebsites.net/Land/QueryLands', {
+		method: "POST",
+		body: JSON.stringify({
+			tile: tile,
+			designation: "General Use Area",
+			extraFilter: "usages['Recreation Activities and Facilities']['Crown Land Recreation']='Yes'"
+		}),
+		headers: {
+			"Content-type": "application/json"
+		}
+	});
 	let data = await response.json()
+	console.log(`Recieved ${data.length} data points.`);
 	return data;
 }
 
@@ -39,6 +29,7 @@ function MyLogoControl(controlDiv) {
 	logo.addEventListener('click', function () {
 		window.location = 'https://www.citizencrown.ca/';
 	});
+	console.log("Logo map control loaded.");
 }
 
 // Function to execute geolocation.
@@ -55,6 +46,7 @@ function attemptGeolocation(map) {
 			},
 			() => {
 				window.alert("The Geolocation service failed. You might need to allow access to your location.");
+				loadApiMapData(map);
 			}
 		);
 	}
@@ -81,46 +73,81 @@ function animateMapZoomTo(map, targetZoom) {
 		});
 		setTimeout(function () { map.setZoom(currentZoom) }, 80);
 	}
+	else {
+		console.log("Marker has been set based on geolocation. Smooth zoom complete.");
+		loadApiMapData(map);
+	}
 }
 
-function loadMapData(map) {
-	// Get a list of object id's.
-	getObjectIds().then(ids => {
-		console.log(`Fetched ids: ${ids}`);
+// Function to get and render map bounds
+function getMapBounds(map, debug) {
+	console.log("Retrieving map bounds based on the camera position/zoom.");
+	var bounds = map.getBounds();
+	var areaBounds = {
+		neCorner: bounds.getNorthEast(),
+		swCorner: bounds.getSouthWest(),
+		nwCorner: new google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getSouthWest().lng()),
+		seCorner: new google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getNorthEast().lng())
+	};
 
-		// Get data and log it to console.
-		getData(ids.toString()).then(data => {
-			console.log(`Fetched ${ids.length} data objects.`);
-			console.debug(data);
-
-			// Iterate through each features geometry set.
-			data.features.forEach(feature => {
-
-				// Create coord paths for map.
-				var rings = feature.geometry.rings;
-				var paths = new Array(rings.length);
-				rings.forEach((group, group_index) => {
-					paths[group_index] = new Array(group.length);
-					group.forEach((region, region_index) => {
-						paths[group_index][region_index] = { lng: region[0], lat: region[1] };
-					})
-				})
-				console.log(`Created paths for: [${feature.attributes.OBJECTID}] ${feature.attributes.NAME_ENG} (${feature.attributes.DESIGNATION_ENG})`);
-
-				// Construct the polygon.
-				const polygonArea = new google.maps.Polygon({
-					paths: paths,
-					strokeColor: "#F58672",
-					strokeOpacity: 1.0,
-					strokeWeight: 2,
-					fillColor: "#F58672",
-					fillOpacity: 0.25,
-				});
-
-				polygonArea.setMap(map);
-				console.log(`Created polygon(s) for: [${feature.attributes.OBJECTID}] ${feature.attributes.NAME_ENG} (${feature.attributes.DESIGNATION_ENG})`);
-			})
+	if (debug) {
+		console.log("Rendering debug zoom as polygon.");
+		const polygonArea = new google.maps.Polygon({
+			paths: [areaBounds.nwCorner, areaBounds.neCorner, areaBounds.seCorner, areaBounds.swCorner],
+			strokeColor: "#DFC4AC",
+			strokeOpacity: 1.0,
+			strokeWeight: 2,
+			fillColor: "#DFC4AC",
+			fillOpacity: 0.25,
 		});
+		polygonArea.setMap(map);
+	}
+	return areaBounds;
+}
+
+// Function to load map data from API
+function loadApiMapData(map) {
+	// Get map bounds.
+	var bounds = getMapBounds(map, true);
+
+	// Create request tile. Must be counter clockwise starting with the top-left corner.
+	var tile = [[parseFloat(bounds.nwCorner.lng().toFixed(7)), parseFloat(bounds.nwCorner.lat().toFixed(7))],
+	[parseFloat(bounds.swCorner.lng().toFixed(7)), parseFloat(bounds.swCorner.lat().toFixed(7))],
+	[parseFloat(bounds.seCorner.lng().toFixed(7)), parseFloat(bounds.seCorner.lat().toFixed(7))],
+	[parseFloat(bounds.neCorner.lng().toFixed(7)), parseFloat(bounds.neCorner.lat().toFixed(7))],
+	[parseFloat(bounds.nwCorner.lng().toFixed(7)), parseFloat(bounds.nwCorner.lat().toFixed(7))]];
+
+	// Get Api data.
+	getApiData(tile).then(data => {
+		console.log("Parsing debug API data to render to map.");
+
+		// Iterate through each features geometry set.
+		data.forEach(feature => {
+
+			// Create coord paths for map.
+			var rings = feature.geometry;
+			var paths = new Array(rings.length);
+			rings.forEach((group, group_index) => {
+				paths[group_index] = new Array(group.length);
+				group.forEach((region, region_index) => {
+					paths[group_index][region_index] = { lng: region[0], lat: region[1] };
+				})
+			});
+
+			// Construct the polygon.
+			const polygonArea = new google.maps.Polygon({
+				paths: paths,
+				strokeColor: "#F58672",
+				strokeOpacity: 1.0,
+				strokeWeight: 2,
+				fillColor: "#F58672",
+				fillOpacity: 0.25,
+			});
+
+			polygonArea.setMap(map);
+			console.log(`Created polygon(s) for: [${feature.id}] ${feature.nameEng} (${feature.designationEng})`);
+		});
+		console.log("Map finished.");
 	});
 }
 
@@ -149,9 +176,7 @@ function initMap() {
 
 			attemptGeolocation(map);
 		})
-		.catch((e) =>
-			window.alert("Geocode was not successful for the following reason: " + e)
+		.catch((exception) =>
+			window.alert("Geocode was not successful for the following reason: " + exception)
 		);
-
-	loadMapData(map);
 }
