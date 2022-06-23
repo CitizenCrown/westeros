@@ -94,11 +94,12 @@ function getMapBounds(map, debug) {
 		console.log("Rendering debug zoom as polygon.");
 		const polygonArea = new google.maps.Polygon({
 			paths: [areaBounds.nwCorner, areaBounds.neCorner, areaBounds.seCorner, areaBounds.swCorner],
-			strokeColor: "#DFC4AC",
+			strokeColor: "#3E5B58",
 			strokeOpacity: 1.0,
 			strokeWeight: 2,
-			fillColor: "#DFC4AC",
-			fillOpacity: 0.25,
+			fillColor: "#3E5B58",
+			fillOpacity: 0.10,
+			clickable: false,
 		});
 		polygonArea.setMap(map);
 	}
@@ -143,8 +144,22 @@ function loadApiMapData(map) {
 				fillColor: "#F58672",
 				fillOpacity: 0.25,
 			});
-
 			polygonArea.setMap(map);
+
+			// Attach a listeners.
+			google.maps.event.addListener(polygonArea, "mouseover", function () {
+				this.setOptions({ strokeColor: "#F58672" });
+				this.setOptions({ fillColor: "#F58672" });
+				this.setOptions({ fillOpacity: 0.50 });
+			});
+
+			google.maps.event.addListener(polygonArea, "mouseout", function () {
+				this.setOptions({ strokeColor: "#F58672" });
+				this.setOptions({ fillColor: "#F58672" });
+				this.setOptions({ fillOpacity: 0.25 });
+			});
+
+			google.maps.addEventL
 			console.log(`Created polygon(s) for: [${feature.id}] ${feature.nameEng} (${feature.designationEng})`);
 		});
 		console.log("Map finished.");
