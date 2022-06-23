@@ -143,19 +143,23 @@ function loadApiMapData(map) {
 				strokeWeight: 2,
 				fillColor: "#F58672",
 				fillOpacity: 0.25,
+				data: {
+					"Name": feature.nameEng,
+					"Designation": feature.designationEng,
+					"Description": feature.policy.landAreaDescrEng,
+					"Intent": feature.policy.landUseIntentDescrEng,
+					"Usage": feature.usages["Recreation Activities and Facilities"]
+				}
 			});
 			polygonArea.setMap(map);
-
+			
 			// Attach a listeners.
 			google.maps.event.addListener(polygonArea, "mouseover", function () {
-				this.setOptions({ strokeColor: "#F58672" });
-				this.setOptions({ fillColor: "#F58672" });
 				this.setOptions({ fillOpacity: 0.50 });
+				console.log(this.data);
 			});
 
 			google.maps.event.addListener(polygonArea, "mouseout", function () {
-				this.setOptions({ strokeColor: "#F58672" });
-				this.setOptions({ fillColor: "#F58672" });
 				this.setOptions({ fillOpacity: 0.25 });
 			});
 
