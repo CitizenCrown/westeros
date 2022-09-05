@@ -23,13 +23,26 @@ function MyLogoControl(controlDiv) {
 	var logo = document.createElement('IMG');
 	logo.src = '../img/logo.png';
 	logo.style.cursor = 'pointer';
-	logo.s
 	controlDiv.appendChild(logo);
 
 	logo.addEventListener('click', function () {
 		window.location = 'https://www.citizencrown.ca/';
 	});
 	console.log("Logo map control loaded.");
+}
+
+// Function to trigger manual search from current view point.
+function SearchControl(controlDiv, map) {
+	controlDiv.style.padding = '5px';
+	var logo = document.createElement('IMG');
+	logo.src = '../img/search.png';
+	logo.style.cursor = 'pointer';
+	controlDiv.appendChild(logo);
+
+	logo.addEventListener('click', function () {
+		console.log("Performing search..");
+		loadApiMapData(map);
+	});
 }
 
 // Function to execute geolocation.
@@ -122,6 +135,7 @@ function getPolygonPaths(rings) {
 
 // Function to load map data from API
 function loadApiMapData(map) {
+
 	// Get map bounds.
 	var mapBounds = getMapBounds(map, true);
 
@@ -209,6 +223,11 @@ function initMap() {
 	const logoControlDiv = document.createElement("div");
 	MyLogoControl(logoControlDiv)
 	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
+
+	// Add search control.
+	const searchControlDiv = document.createElement("div");
+	SearchControl(searchControlDiv, map)
+	map.controls[google.maps.ControlPosition.RIGHT_TOP].push(searchControlDiv);
 
 	// Focus map position on Ontario.
 	const geocoder = new google.maps.Geocoder();
