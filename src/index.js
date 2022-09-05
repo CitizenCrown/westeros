@@ -1,12 +1,12 @@
 // Function to request specific object data from the government Ontario website.
-async function getApiData(tile) {
+async function getApiData(bounds) {
 	console.log("Requesting data from the API..");
-	let response = await fetch('https://essosapi20220512144031.azurewebsites.net/Land/QueryLands', {
+	let response = await fetch('http://20.102.18.131/Land/QueryLands', {
 		method: "POST",
 		body: JSON.stringify({
-			tile: tile,
-			designation: "General Use Area",
-			extraFilter: "usages['Recreation Activities and Facilities']['Crown Land Recreation']='Yes'"
+			includeGeometry: true,
+			gridSize: 0.00001,
+			bounds: bounds
 		}),
 		headers: {
 			"Content-type": "application/json"
@@ -106,38 +106,66 @@ function getMapBounds(map, debug) {
 	return areaBounds;
 }
 
+// Function to get polygon paths from returned data
+function getPolygonPaths(rings) {
+	// Create coord paths for map.
+	var rings = rings;
+	var paths = new Array(rings.length);
+	rings.forEach((group, group_index) => {
+		paths[group_index] = new Array(group.length);
+		group.forEach((region, region_index) => {
+			paths[group_index][region_index] = { lng: region[0], lat: region[1] };
+		})
+	});
+	return paths[0];
+}
+
 // Function to load map data from API
 function loadApiMapData(map) {
 	// Get map bounds.
-	var bounds = getMapBounds(map, true);
+	var mapBounds = getMapBounds(map, true);
 
 	// Create request tile. Must be counter clockwise starting with the top-left corner.
-	var tile = [[parseFloat(bounds.nwCorner.lng().toFixed(7)), parseFloat(bounds.nwCorner.lat().toFixed(7))],
-	[parseFloat(bounds.swCorner.lng().toFixed(7)), parseFloat(bounds.swCorner.lat().toFixed(7))],
-	[parseFloat(bounds.seCorner.lng().toFixed(7)), parseFloat(bounds.seCorner.lat().toFixed(7))],
-	[parseFloat(bounds.neCorner.lng().toFixed(7)), parseFloat(bounds.neCorner.lat().toFixed(7))],
-	[parseFloat(bounds.nwCorner.lng().toFixed(7)), parseFloat(bounds.nwCorner.lat().toFixed(7))]];
+	var coordinates = [[[parseFloat(mapBounds.nwCorner.lng().toFixed(7)), parseFloat(mapBounds.nwCorner.lat().toFixed(7))],
+	[parseFloat(mapBounds.swCorner.lng().toFixed(7)), parseFloat(mapBounds.swCorner.lat().toFixed(7))],
+	[parseFloat(mapBounds.seCorner.lng().toFixed(7)), parseFloat(mapBounds.seCorner.lat().toFixed(7))],
+	[parseFloat(mapBounds.neCorner.lng().toFixed(7)), parseFloat(mapBounds.neCorner.lat().toFixed(7))],
+	[parseFloat(mapBounds.nwCorner.lng().toFixed(7)), parseFloat(mapBounds.nwCorner.lat().toFixed(7))]]];
+
+	// Create bounds object.
+	var bounds = {
+		type: "Polygon",
+		coordinates: coordinates
+	};
 
 	// Get Api data.
-	getApiData(tile).then(data => {
+	// TODO: Request geometry separately.
+	// TODO: Request policy during popup.
+	getApiData(bounds).then(data => {
 		console.log("Parsing debug API data to render to map.");
 
 		// Iterate through each features geometry set.
 		data.forEach(feature => {
 
-			// Create coord paths for map.
-			var rings = feature.geometry;
-			var paths = new Array(rings.length);
-			rings.forEach((group, group_index) => {
-				paths[group_index] = new Array(group.length);
-				group.forEach((region, region_index) => {
-					paths[group_index][region_index] = { lng: region[0], lat: region[1] };
-				})
-			});
+			// Debug
+			console.log(feature);
+
+			// TODO: Load GeoJson instead?
+			// map.data.addGeoJson(feature);
+			var geometry = feature.geometry.coordinates;
+			var polygonPaths = [];
+			if (feature.geometry.type == "Polygon") {
+				polygonPaths = getPolygonPaths(geometry)
+			}
+			else {
+				geometry.forEach(polygon => {
+					polygonPaths.push(getPolygonPaths(polygon))
+				});
+			}
 
 			// Construct the polygon.
 			const polygonArea = new google.maps.Polygon({
-				paths: paths,
+				paths: polygonPaths,
 				strokeColor: "#F58672",
 				strokeOpacity: 1.0,
 				strokeWeight: 2,
@@ -148,11 +176,10 @@ function loadApiMapData(map) {
 					"Designation": feature.designationEng,
 					"Description": feature.policy.landAreaDescrEng,
 					"Intent": feature.policy.landUseIntentDescrEng,
-					"Usage": feature.usages["Recreation Activities and Facilities"]
 				}
 			});
 			polygonArea.setMap(map);
-			
+
 			// Attach a listeners.
 			google.maps.event.addListener(polygonArea, "mouseover", function () {
 				this.setOptions({ fillOpacity: 0.50 });
@@ -163,8 +190,7 @@ function loadApiMapData(map) {
 				this.setOptions({ fillOpacity: 0.25 });
 			});
 
-			google.maps.addEventL
-			console.log(`Created polygon(s) for: [${feature.id}] ${feature.nameEng} (${feature.designationEng})`);
+			console.log(`Created polygon(s) for: [${feature.ogfId}] - ${feature.nameEng} (${feature.designationEng})`);
 		});
 		console.log("Map finished.");
 	});
@@ -199,3 +225,27 @@ function initMap() {
 			window.alert("Geocode was not successful for the following reason: " + exception)
 		);
 }
+
+// // Function to handle the credential response for Google sign in.
+// function handleCredentialResponse(response) {
+
+// 	// Decode the credential response.
+// 	const responsePayload = decodeJwtResponse(response.credential);
+
+// 	console.log("ID: " + responsePayload.sub);
+// 	console.log('Full Name: ' + responsePayload.name);
+// 	console.log('Given Name: ' + responsePayload.given_name);
+// 	console.log('Family Name: ' + responsePayload.family_name);
+// 	console.log("Image URL: " + responsePayload.picture);
+// 	console.log("Email: " + responsePayload.email);
+
+// 	// TODO: Determine if logon is successful and call this pageload.
+// 	// TODO: Handle restricting users.
+// 	//window.location.href = "../public/map.html";
+// }
+
+// // Function to decode JWT response.
+// function decodeJwtResponse(token) {
+// 	var tokens = token.split(".");
+// 	return JSON.parse(atob(tokens[1]));
+// };
