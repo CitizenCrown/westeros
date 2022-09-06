@@ -59,6 +59,8 @@ function userControl(controlDiv, user) {
 	control.src = user.picture;
 	control.style.cursor = 'pointer';
 	control.style.borderRadius = '50%';
+	control.style.height = '64px';
+	control.style.width = '64px';
 	controlDiv.appendChild(control);
 }
 
