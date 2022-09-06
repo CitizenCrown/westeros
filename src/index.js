@@ -8,7 +8,7 @@ let acceptedUserList = ["joshtaylor.se@gmail.com", "christopher_king@hotmail.com
 // Function to request specific object data from the government Ontario website.
 async function getApiData(bounds) {
 	console.log("Requesting data from the API..");
-	let response = await fetch('http://20.102.18.131/Land/QueryLands', {
+	let response = await fetch('https://citizen-crown.azurewebsites.net/Land/QueryLands', {
 		method: "POST",
 		body: JSON.stringify({
 			includeGeometry: true,
