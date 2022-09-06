@@ -1,3 +1,6 @@
+// Global info window.
+let infoWindow;
+
 // Function to request specific object data from the government Ontario website.
 async function getApiData(bounds) {
 	console.log("Requesting data from the API..");
@@ -164,7 +167,7 @@ function loadApiMapData(map) {
 			// Debug
 			console.log(feature);
 
-			// TODO: Load GeoJson instead?
+			// TODO: Load GeoJson instead (https://developers.google.com/maps/documentation/javascript/reference/data#Data.GeoJsonOptions)?
 			// map.data.addGeoJson(feature);
 			var geometry = feature.geometry.coordinates;
 			var polygonPaths = [];
@@ -186,10 +189,10 @@ function loadApiMapData(map) {
 				fillColor: "#F58672",
 				fillOpacity: 0.25,
 				data: {
-					"Name": feature.nameEng,
-					"Designation": feature.designationEng,
-					"Description": feature.policy.landAreaDescrEng,
-					"Intent": feature.policy.landUseIntentDescrEng,
+					"name": feature.nameEng,
+					"description": feature.policy.landAreaDescrEng,
+					"intent": feature.policy.landUseIntentDescrEng,
+					"designation": feature.designationEng
 				}
 			});
 			polygonArea.setMap(map);
@@ -197,17 +200,35 @@ function loadApiMapData(map) {
 			// Attach a listeners.
 			google.maps.event.addListener(polygonArea, "mouseover", function () {
 				this.setOptions({ fillOpacity: 0.50 });
-				console.log(this.data);
 			});
 
 			google.maps.event.addListener(polygonArea, "mouseout", function () {
 				this.setOptions({ fillOpacity: 0.25 });
 			});
 
+			google.maps.event.addListener(polygonArea, "click", showArrays(map));
+
 			console.log(`Created polygon(s) for: [${feature.ogfId}] - ${feature.nameEng} (${feature.designationEng})`);
 		});
 		console.log("Map finished.");
 	});
+}
+
+function showArrays(map) {
+	return function (event) {
+
+		// Build info window content string.
+		let contentString = `<b>${this.data.name}</b><br><br>`
+			+ `<b>Description: </b>${this.data.description}<br>`
+			+ `<b>intent: </b>${this.data.intent}<br>`
+			+ `<b>Designation: </b>${this.data.designation}<br><br>`
+			+ `<b>Coords: </b>(lat:${event.latLng.lat()}, lng:${event.latLng.lng()}`;
+
+		// Replace the info window's content and position.
+		infoWindow.setContent(contentString);
+		infoWindow.setPosition(event.latLng);
+		infoWindow.open(map);
+	}
 }
 
 // This example creates simple polygons representing crown land in Ontario.
@@ -218,6 +239,10 @@ function initMap() {
 		disableDefaultUI: true,
 	});
 	console.log("Initializing map.");
+
+	// Initialize the infoWindow.
+	// TODO: We might need to set a max width (https://developers.google.com/maps/documentation/javascript/examples/infowindow-simple-max).
+	infoWindow = new google.maps.InfoWindow();
 
 	// Add logo control.
 	const logoControlDiv = document.createElement("div");
