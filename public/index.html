@@ -15,7 +15,7 @@
   <meta name="keywords" content="HTML, CSS, JavaScript, Crown Land, Ontario, Canada">
 
   <!-- Google sign-in -->
-  <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RBCWXCRJXS"></script>
@@ -30,27 +30,23 @@
 <body>
   <div id="map"></div>
 
-  <!-- Login page logo -->
-  <!-- <div id="logo">
-    <img src="../img/logo.png" alt="Logo">
-    
-    <div id="g_id_onload"
-      data-client_id="612894667174-ociu9l55arrle95jcj9g6j6kgorpa4jo.apps.googleusercontent.com"
-      data-context="signin"
-      data-ux_mode="popup"
-      data-callback="handleCredentialResponse"
-      data-auto_prompt="false">
-    </div>
+  <!-- Create a sign-in overlay -->
+  <div id="overlay">
+    <div class="overlay-content">
+      <div id="logo">
+        <img src="../img/logo.png" alt="Logo">
+      </div>
 
-    <div class="g_id_signin"
-      data-type="standard"
-      data-shape="rectangular"
-      data-theme="outline"
-      data-text="signin_with"
-      data-size="large"
-      data-logo_alignment="left">
+      <!-- TODO handle auto prompt with actual login page -->
+      <div id="g_id_onload" data-client_id="612894667174-ociu9l55arrle95jcj9g6j6kgorpa4jo.apps.googleusercontent.com"
+        data-context="signin" data-ux_mode="popup" data-callback="onGoogleSignIn" data-auto_prompt="false">
+      </div>
+
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_black"
+        data-text="signin_with" data-size="large" data-logo_alignment="left">
+      </div>
     </div>
-  </div>   -->
+  </div>
 
   <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
   <script

@@ -1,5 +1,9 @@
 // Global info window.
+let map;
 let infoWindow;
+
+// TODO: Move to a database and store these emails in base64 here.
+let acceptedUserList = ["joshtaylor.se@gmail.com", "christopher_king@hotmail.com", "khavaran@gmail.com"];
 
 // Function to request specific object data from the government Ontario website.
 async function getApiData(bounds) {
@@ -21,7 +25,7 @@ async function getApiData(bounds) {
 }
 
 // Function to add logo to the map with link to website.
-function MyLogoControl(controlDiv) {
+function myLogoControl(controlDiv) {
 	controlDiv.style.padding = '5px';
 	var logo = document.createElement('IMG');
 	logo.src = '../img/logo.png';
@@ -35,7 +39,7 @@ function MyLogoControl(controlDiv) {
 }
 
 // Function to trigger manual search from current view point.
-function SearchControl(controlDiv, map) {
+function searchControl(controlDiv, map) {
 	controlDiv.style.padding = '5px';
 	var logo = document.createElement('IMG');
 	logo.src = '../img/search.png';
@@ -46,6 +50,16 @@ function SearchControl(controlDiv, map) {
 		console.log("Performing search..");
 		loadApiMapData(map);
 	});
+}
+
+// Function to create a user control.
+function userControl(controlDiv, user) {
+	controlDiv.style.padding = '5px';
+	var control = document.createElement('IMG');
+	control.src = user.picture;
+	control.style.cursor = 'pointer';
+	control.style.borderRadius = '50%';
+	controlDiv.appendChild(control);
 }
 
 // Function to execute geolocation.
@@ -216,7 +230,6 @@ function loadApiMapData(map) {
 
 function showArrays(map) {
 	return function (event) {
-
 		// Build info window content string.
 		let contentString = `<b>${this.data.name}</b><br><br>`
 			+ `<b>Description: </b>${this.data.description}<br>`
@@ -231,9 +244,50 @@ function showArrays(map) {
 	}
 }
 
+// Function to start the sign on flow.
+function triggerSignIn() {
+	document.getElementById("overlay").style.display = "flex";
+}
+
+// Function to handle Google sign in.
+function onGoogleSignIn(response) {
+	// Decode the credential response.
+	const responsePayload = decodeJwtResponse(response.credential);
+
+	console.log("ID: " + responsePayload.sub);
+	console.log('Full Name: ' + responsePayload.name);
+	console.log('Given Name: ' + responsePayload.given_name);
+	console.log('Family Name: ' + responsePayload.family_name);
+	console.log("Image URL: " + responsePayload.picture);
+	console.log("Email: " + responsePayload.email);
+
+	// If login successful. Disable the login screen & trigger geolocation.
+	if (acceptedUserList.includes(responsePayload.email)) {
+		// Disable login screen.
+		document.getElementById("overlay").style.display = "none";
+
+		// Add user control.
+		const userControlDiv = document.createElement("div");
+		userControl(userControlDiv, responsePayload)
+		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(userControlDiv);
+
+		// Trigger map flow.
+		attemptGeolocation(map);
+	}
+	else {
+		window.alert("The user login failed. You are not a verified user.");
+	}
+}
+
+// Function to decode JWT response.
+function decodeJwtResponse(token) {
+	var tokens = token.split(".");
+	return JSON.parse(atob(tokens[1]));
+};
+
 // This example creates simple polygons representing crown land in Ontario.
 function initMap() {
-	const map = new google.maps.Map(document.getElementById("map"), {
+	map = new google.maps.Map(document.getElementById("map"), {
 		zoom: 6,
 		mapTypeId: "terrain",
 		disableDefaultUI: true,
@@ -246,13 +300,13 @@ function initMap() {
 
 	// Add logo control.
 	const logoControlDiv = document.createElement("div");
-	MyLogoControl(logoControlDiv)
+	myLogoControl(logoControlDiv)
 	map.controls[google.maps.ControlPosition.TOP_LEFT].push(logoControlDiv);
 
 	// Add search control.
 	const searchControlDiv = document.createElement("div");
-	SearchControl(searchControlDiv, map)
-	map.controls[google.maps.ControlPosition.RIGHT_TOP].push(searchControlDiv);
+	searchControl(searchControlDiv, map)
+	map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(searchControlDiv);
 
 	// Focus map position on Ontario.
 	const geocoder = new google.maps.Geocoder();
@@ -263,33 +317,10 @@ function initMap() {
 			map.setCenter(position);
 			console.log("Map centered on Ontario.");
 
-			attemptGeolocation(map);
+			// Sign in.
+			triggerSignIn();
 		})
 		.catch((exception) =>
 			window.alert("Geocode was not successful for the following reason: " + exception)
 		);
 }
-
-// // Function to handle the credential response for Google sign in.
-// function handleCredentialResponse(response) {
-
-// 	// Decode the credential response.
-// 	const responsePayload = decodeJwtResponse(response.credential);
-
-// 	console.log("ID: " + responsePayload.sub);
-// 	console.log('Full Name: ' + responsePayload.name);
-// 	console.log('Given Name: ' + responsePayload.given_name);
-// 	console.log('Family Name: ' + responsePayload.family_name);
-// 	console.log("Image URL: " + responsePayload.picture);
-// 	console.log("Email: " + responsePayload.email);
-
-// 	// TODO: Determine if logon is successful and call this pageload.
-// 	// TODO: Handle restricting users.
-// 	//window.location.href = "../public/map.html";
-// }
-
-// // Function to decode JWT response.
-// function decodeJwtResponse(token) {
-// 	var tokens = token.split(".");
-// 	return JSON.parse(atob(tokens[1]));
-// };

@@ -12,14 +12,33 @@ body {
   padding: 0;
 }
 
-/* #logo {
+/* Sign in overlay - TODO: write a proper login flow */
+#overlay {
+  position: fixed;
+  display: none;
   width: 100%;
-  height: 100px;
-  text-align: center;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  align-items: center;
+  justify-content: center;
 }
 
-.g_id_signin {
-  display: flex;
-  justify-content: center;
+.overlay-content {
+  display: block;
   align-items: center;
-} */
+  justify-content: center;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgba(0, 0, 0, 0.50) 0px 10px 20px, rgba(0, 0, 0, 0.75) 0px 6px 6px;
+}
+
+#logo {
+  width: 100%;
+  padding-bottom: 10px;
+  text-align: center;
+}
