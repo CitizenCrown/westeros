@@ -1,4 +1,4 @@
-// Global info window.
+// Global variables. This is bad.
 let map;
 let infoWindow;
 
@@ -39,7 +39,7 @@ function myLogoControl(controlDiv) {
 }
 
 // Function to trigger manual search from current view point.
-function searchControl(controlDiv, map) {
+function searchControl(controlDiv) {
 	controlDiv.style.padding = '5px';
 	var logo = document.createElement('IMG');
 	logo.src = '../img/search.png';
@@ -48,7 +48,7 @@ function searchControl(controlDiv, map) {
 
 	logo.addEventListener('click', function () {
 		console.log("Performing search..");
-		loadApiMapData(map);
+		loadApiMapData();
 	});
 }
 
@@ -65,7 +65,7 @@ function userControl(controlDiv, user) {
 }
 
 // Function to execute geolocation.
-function attemptGeolocation(map) {
+function attemptGeolocation() {
 	console.log("Attempting to use geolocation.");
 	if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(
@@ -74,18 +74,18 @@ function attemptGeolocation(map) {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude,
 				};
-				addMarker(map, pos);
+				addMarker(pos);
 			},
 			() => {
 				window.alert("The Geolocation service failed. You might need to allow access to your location.");
-				loadApiMapData(map);
+				loadApiMapData();
 			}
 		);
 	}
 }
 
 // Function to add marker.
-function addMarker(map, pos) {
+function addMarker(pos) {
 	var marker = new google.maps.Marker({
 		position: { lat: pos.lat, lng: pos.lng },
 		map: map,
@@ -100,19 +100,19 @@ function addMarker(map, pos) {
 function animateMapZoomTo(map, targetZoom) {
 	var currentZoom = arguments[2] || map.getZoom();
 	if (currentZoom != targetZoom) {
-		google.maps.event.addListenerOnce(map, 'zoom_changed', function (event) {
+		google.maps.event.addListenerOnce(map, 'zoom_changed', function () {
 			animateMapZoomTo(map, targetZoom, currentZoom + (targetZoom > currentZoom ? 1 : -1));
 		});
 		setTimeout(function () { map.setZoom(currentZoom) }, 80);
 	}
 	else {
 		console.log("Marker has been set based on geolocation. Smooth zoom complete.");
-		loadApiMapData(map);
+		loadApiMapData();
 	}
 }
 
 // Function to get and render map bounds
-function getMapBounds(map, debug) {
+function getMapBounds(debug) {
 	console.log("Retrieving map bounds based on the camera position/zoom.");
 	var bounds = map.getBounds();
 	var areaBounds = {
@@ -153,10 +153,10 @@ function getPolygonPaths(rings) {
 }
 
 // Function to load map data from API
-function loadApiMapData(map) {
+function loadApiMapData() {
 
 	// Get map bounds.
-	var mapBounds = getMapBounds(map, true);
+	var mapBounds = getMapBounds(true);
 
 	// Create request tile. Must be counter clockwise starting with the top-left corner.
 	var coordinates = [[[parseFloat(mapBounds.nwCorner.lng().toFixed(7)), parseFloat(mapBounds.nwCorner.lat().toFixed(7))],
@@ -222,7 +222,7 @@ function loadApiMapData(map) {
 				this.setOptions({ fillOpacity: 0.25 });
 			});
 
-			google.maps.event.addListener(polygonArea, "click", showArrays(map));
+			google.maps.event.addListener(polygonArea, "click", showInfoWindow());
 
 			console.log(`Created polygon(s) for: [${feature.ogfId}] - ${feature.nameEng} (${feature.designationEng})`);
 		});
@@ -230,7 +230,8 @@ function loadApiMapData(map) {
 	});
 }
 
-function showArrays(map) {
+// Function to show info window.
+function showInfoWindow() {
 	return function (event) {
 		// Build info window content string.
 		let contentString = `<b>${this.data.name}</b><br><br>`
@@ -256,12 +257,14 @@ function onGoogleSignIn(response) {
 	// Decode the credential response.
 	const responsePayload = decodeJwtResponse(response.credential);
 
+	// Do not store the user Id. Use the ID Token instead (https://developers.google.com/identity/gsi/web/guides/revoke?hl=en).
 	console.log("ID: " + responsePayload.sub);
 	console.log('Full Name: ' + responsePayload.name);
 	console.log('Given Name: ' + responsePayload.given_name);
 	console.log('Family Name: ' + responsePayload.family_name);
 	console.log("Image URL: " + responsePayload.picture);
 	console.log("Email: " + responsePayload.email);
+	console.log("ID Token: " + response.credential);
 
 	// If login successful. Disable the login screen & trigger geolocation.
 	if (acceptedUserList.includes(responsePayload.email)) {
@@ -274,7 +277,7 @@ function onGoogleSignIn(response) {
 		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(userControlDiv);
 
 		// Trigger map flow.
-		attemptGeolocation(map);
+		attemptGeolocation();
 	}
 	else {
 		window.alert("The user login failed. You are not a verified user.");
@@ -307,7 +310,7 @@ function initMap() {
 
 	// Add search control.
 	const searchControlDiv = document.createElement("div");
-	searchControl(searchControlDiv, map)
+	searchControl(searchControlDiv)
 	map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(searchControlDiv);
 
 	// Focus map position on Ontario.
