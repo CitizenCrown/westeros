@@ -215,7 +215,7 @@ function loadApiMapData() {
 
 			// Attach a listeners.
 			google.maps.event.addListener(polygonArea, "mouseover", function () {
-				this.setOptions({ fillOpacity: 0.50 });
+				this.setOptions({ fillOpacity: 0.75 });
 			});
 
 			google.maps.event.addListener(polygonArea, "mouseout", function () {
