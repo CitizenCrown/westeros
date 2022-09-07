@@ -3,7 +3,7 @@ let map;
 let infoWindow;
 
 // TODO: Move to a database and store these emails in base64 here.
-let acceptedUserList = ["joshtaylor.se@gmail.com", "christopher_king@hotmail.com", "khavaran@gmail.com"];
+let acceptedUserList = ["joshtaylor.se@gmail.com", "heroic.self.hiphop@gmail.com", "khavaran@gmail.com"];
 
 // Function to request specific object data from the government Ontario website.
 async function getApiData(bounds) {
