@@ -205,10 +205,12 @@ function loadApiMapData() {
 				fillColor: "#F58672",
 				fillOpacity: 0.25,
 				data: {
+					"id": feature.ogfId,
 					"name": feature.nameEng,
 					"description": feature.policy.landAreaDescrEng,
 					"intent": feature.policy.landUseIntentDescrEng,
-					"designation": feature.designationEng
+					"designation": feature.designationEng,
+					"policy_id": feature.policyIdent
 				}
 			});
 			polygonArea.setMap(map);
@@ -234,9 +236,9 @@ function loadApiMapData() {
 function showInfoWindow() {
 	return function (event) {
 		// Build info window content string.
-		let contentString = `<b>${this.data.name}</b><br><br>`
-			+ `<b>Description: </b>${this.data.description}<br>`
-			+ `<b>intent: </b>${this.data.intent}<br>`
+		let contentString = `<b>${this.data.id} - ${this.data.name} (${this.data.policy_id})</b><br><br>`
+			+ `<b>Description: </b>${this.data.description}<br><br>`
+			+ `<b>Intent: </b>${this.data.intent}<br><br>`
 			+ `<b>Designation: </b>${this.data.designation}<br><br>`
 			+ `<b>Coords: </b>(lat:${event.latLng.lat()}, lng:${event.latLng.lng()}`;
 
