@@ -344,6 +344,8 @@ function myLogoControl(controlDiv) {
 	var logo = document.createElement('IMG');
 	logo.src = '../img/logo.png';
 	logo.style.cursor = 'pointer';
+	logo.style.height = '40px';
+	logo.style.width = '40px';
 	controlDiv.appendChild(logo);
 
 	logo.addEventListener('click', function () {
@@ -355,12 +357,14 @@ function myLogoControl(controlDiv) {
 // Function to trigger manual search from current view point.
 function searchControl(controlDiv) {
 	controlDiv.style.padding = '5px';
-	var logo = document.createElement('IMG');
-	logo.src = '../img/search.png';
-	logo.style.cursor = 'pointer';
-	controlDiv.appendChild(logo);
+	var search = document.createElement('IMG');
+	search.src = '../img/search.png';
+	search.style.cursor = 'pointer';
+	search.style.height = '40px';
+	search.style.width = '40px';
+	controlDiv.appendChild(search);
 
-	logo.addEventListener('click', function () {
+	search.addEventListener('click', function () {
 		console.log("Performing search..");
 		loadApiMapData();
 	});
@@ -373,8 +377,8 @@ function userControl(controlDiv, user) {
 	control.src = user.picture;
 	control.style.cursor = 'pointer';
 	control.style.borderRadius = '50%';
-	control.style.height = '64px';
-	control.style.width = '64px';
+	control.style.height = '40px';
+	control.style.width = '40px';
 	controlDiv.appendChild(control);
 }
 
@@ -627,7 +631,7 @@ function initMap() {
 	// Add search control.
 	const searchControlDiv = document.createElement("div");
 	searchControl(searchControlDiv)
-	map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(searchControlDiv);
+	map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchControlDiv);
 
 	// Focus map position on Ontario.
 	const geocoder = new google.maps.Geocoder();
